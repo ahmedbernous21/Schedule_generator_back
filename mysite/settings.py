@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-4(8)o7_xr3bdsn$!=h-*^7*f%+-8hmge-3f786o6#7tcuq1izk
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -37,6 +37,15 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+	'corsheaders',
+    "main",
+	"rest_framework",
+    "rest_framework.authtoken",
+	'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    "dj_rest_auth",
+    "dj_rest_auth.registration",
 ]
 
 MIDDLEWARE = [
@@ -47,9 +56,22 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+	'corsheaders.middleware.CorsMiddleware',
+	"allauth.account.middleware.AccountMiddleware"
 ]
-
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4200",  
+]
 ROOT_URLCONF = "mysite.urls"
+AUTHENTICATION_CLASSES = (
+    'dj_rest_auth.authentication.AllAuthJWTAuthentication',
+)
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+}
 
 TEMPLATES = [
     {
@@ -69,17 +91,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "mysite.wsgi.application"
 
+AUTH_USER_MODEL = "main.User"
+ACCOUNT_USER_MODEL_USERNAME_FIELD = "email"
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "myproject",
+        "USER": "myprojectuser",
+        "PASSWORD": 'myprojectpassword',
+        "HOST": 'db',
+        "PORT": "5432",
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

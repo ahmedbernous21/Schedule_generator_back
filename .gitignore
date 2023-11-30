@@ -1,0 +1,23 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# vs code configuration folder
+.vscode
+
+*.log
+
+/static
+/media/user-media
+node_modules
+front/webpack-stats.json
+main/static/main/builds/*
+main/static/main/main/*
+main/static/main/builds/webpack-stats.json
+backups
+debug.log
+angular_errors.log
+/socks
+media/fixtures/service-picture*
+celerybeat-schedule
