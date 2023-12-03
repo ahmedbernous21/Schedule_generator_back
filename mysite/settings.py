@@ -59,6 +59,7 @@ MIDDLEWARE = [
 	'corsheaders.middleware.CorsMiddleware',
 	"allauth.account.middleware.AccountMiddleware"
 ]
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",  
 ]
