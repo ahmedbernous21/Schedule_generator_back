@@ -3,7 +3,7 @@ FROM python:3.10.1
 
 # Set environment variables
 ENV PYTHONUNBUFFERED 1
-ENV DJANGO_SETTINGS_MODULE=mysite.settings
+ENV DJANGO_SETTINGS_MODULE=unilar.settings
 
 #install psycopg dependencies
 RUN apt-get update && apt-get install -y \

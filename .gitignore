@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+unilar/__pycache__/
 
 # vs code configuration folder
 .vscode
