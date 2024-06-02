@@ -29,7 +29,7 @@ ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
-
+REST_USE_JWT = False
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+	'django.contrib.sites',
 	'corsheaders',
     "main",
 	"rest_framework",
@@ -47,7 +48,21 @@ INSTALLED_APPS = [
     "dj_rest_auth",
     "dj_rest_auth.registration",
 ]
-
+CORS_ALLOW_HEADERS = (
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+	'cookie',
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+    "Pragma",
+    "Cache-Control",
+    "X-OpenReplay-SessionID",
+)
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -62,18 +77,31 @@ MIDDLEWARE = [
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",  
+    "http://127.0.0.1:4200",  
 ]
 ROOT_URLCONF = "unilar.urls"
-AUTHENTICATION_CLASSES = (
-    'dj_rest_auth.authentication.AllAuthJWTAuthentication',
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
 )
-
+CORS_ORIGIN_WHITELIST = (
+    f"http://127.0.0.1:4200",
+    "https://babar.app",
+    f"http://localhost:4200",
+)
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+		'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
-    ],
+    ),
 }
-
+REST_AUTH_SERIALIZERS = {
+    "USER_DETAILS_SERIALIZER": "main.serializers.UserSerializer",
+    "LOGIN_SERIALIZER": "main.serializers.CustomLoginSerializer",
+}
+SITE_ID = 1
+ACCOUNT_LOGOUT_ON_GET = True
+CORS_ORIGIN_ALLOW_ALL = True
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -100,7 +128,6 @@ ACCOUNT_USERNAME_REQUIRED = False
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -111,7 +138,6 @@ DATABASES = {
         "PORT": "5432",
     }
 }
-
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
