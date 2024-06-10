@@ -59,6 +59,7 @@ class Teacher(models.Model):
     def assignModule(self, module):
         self.modules.add(module)
 
+
 class Classroom(models.Model):
     CLASSROM_TYPES = [("TD", "TD"), ("TP", "TP"), ("AMPHI", "AMPHI")]
     classroom_number = models.IntegerField()
@@ -66,10 +67,20 @@ class Classroom(models.Model):
 
     def setAvailability(self):
         pass
+
+
 class TimeSlot(models.Model):
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+    TIME_CHOICES = [
+        ("8h:00-9h:30", "8h:00-9h:30"),
+        ("9h:30-11h:00", "9h:30-11h:00"),
+        ("11h:00-12h:30", "11h:00-12h:30"),
+        ("12h:30-14h:00", "12h:30-14h:00"),
+        ("14h:00-15h:30", "14h:00-15h:30"),
+        ("15h:30-17h:00", "15h:30-17h:00"),
+    ]
+
     day = models.CharField(max_length=20)
+    time = models.CharField(max_length=20, choices=TIME_CHOICES, default="")
     module = models.ForeignKey(Module, on_delete=models.CASCADE)
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE)
 
@@ -107,5 +118,3 @@ class Schedule(models.Model):
 
     def validateSchedule(self):
         pass
-
-

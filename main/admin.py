@@ -30,7 +30,7 @@ class ClassroomAdmin(admin.ModelAdmin):
 
 @admin.register(TimeSlot)
 class TimeSlotAdmin(admin.ModelAdmin):
-    list_display = ("start_time", "end_time", "day", "module", "classroom")
+    list_display = ("time", "day", "module", "classroom")
     search_fields = ("day", "module__name", "classroom__classroom_number")
 
 

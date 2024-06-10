@@ -37,14 +37,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-	'django.contrib.sites',
-	'corsheaders',
+    "django.contrib.sites",
+    "corsheaders",
     "main",
-	"rest_framework",
+    "rest_framework",
     "rest_framework.authtoken",
-	'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
     "dj_rest_auth",
     "dj_rest_auth.registration",
 ]
@@ -53,7 +53,7 @@ CORS_ALLOW_HEADERS = (
     "accept-encoding",
     "authorization",
     "content-type",
-	'cookie',
+    "cookie",
     "dnt",
     "origin",
     "user-agent",
@@ -71,18 +71,18 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-	'corsheaders.middleware.CorsMiddleware',
-	"allauth.account.middleware.AccountMiddleware"
+    "corsheaders.middleware.CorsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:4200",  
-    "http://127.0.0.1:4200",  
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
 ]
 ROOT_URLCONF = "unilar.urls"
 AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
 )
 CORS_ORIGIN_WHITELIST = (
     f"http://127.0.0.1:4200",
@@ -90,9 +90,9 @@ CORS_ORIGIN_WHITELIST = (
     f"http://localhost:4200",
 )
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-		'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
     ),
 }
 REST_AUTH_SERIALIZERS = {
@@ -133,8 +133,8 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "myproject",
         "USER": "myprojectuser",
-        "PASSWORD": 'myprojectpassword',
-        "HOST": 'db',
+        "PASSWORD": "myprojectpassword",
+        "HOST": "db",
         "PORT": "5432",
     }
 }
