@@ -1,0 +1,87 @@
+[
+  {
+    "model": "main.Module",
+    "pk": 1,
+    "fields": {
+      "name": "C-OPM",
+      "tp_hours": 0.0,
+      "td_hours": 0.0,
+      "cours_hours": 0.0
+    }
+  },
+  {
+    "model": "main.Module",
+    "pk": 2,
+    "fields": {
+      "name": "C-TIC",
+      "tp_hours": 0.0,
+      "td_hours": 0.0,
+      "cours_hours": 0.0
+    }
+  },
+  {
+    "model": "main.Teacher",
+    "pk": 1,
+    "fields": {
+      "name": "Maallem",
+      "hours": 0.0,
+      "modules": [1]
+    }
+  },
+  {
+    "model": "main.Teacher",
+    "pk": 2,
+    "fields": {
+      "name": "AliGuechi",
+      "hours": 0.0,
+      "modules": [2]
+    }
+  },
+  {
+    "model": "main.Classroom",
+    "pk": 1,
+    "fields": {
+      "classroom_number": 2,
+      "type": "AMPHI"
+    }
+  },
+  {
+    "model": "main.TimeSlot",
+    "pk": 1,
+    "fields": {
+      "day": "Saturday",
+      "time": "8h:00-9h:30",
+      "module": 1,
+      "classroom": 1
+    }
+  },
+  {
+    "model": "main.TimeSlot",
+    "pk": 2,
+    "fields": {
+      "day": "Saturday",
+      "time": "11h:00-12h:30",
+      "module": 2,
+      "classroom": 1
+    }
+  },
+  {
+    "model": "main.Group",
+    "pk": 1,
+    "fields": {
+      "number": 1,
+      "grade": 1,
+      "semester": 1,
+      "specialty": "Info",
+      "school_year": "2023/2024"
+    }
+  },
+  {
+    "model": "main.Schedule",
+    "pk": 1,
+    "fields": {
+      "group": 1,
+      "time_slots": [1, 2]
+    }
+  }
+]

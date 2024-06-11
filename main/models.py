@@ -78,9 +78,19 @@ class TimeSlot(models.Model):
         ("14h:00-15h:30", "14h:00-15h:30"),
         ("15h:30-17h:00", "15h:30-17h:00"),
     ]
+    DAY_CHOICES = [
+        ("Saturday", "Saturday"),
+        ("Sunday", "Sunday"),
+        ("Monday", "Monday"),
+        ("Tuesday", "Tuesday"),
+        ("Wednesday", "Wednesday"),
+        ("Thursday", "Thursday"),
+    ]
+    TIMESLOT_TYPES = [("TD", "TD"), ("TP", "TP"), ("COURS", "COURS")]
 
-    day = models.CharField(max_length=20)
+    day = models.CharField(max_length=20, choices=DAY_CHOICES, default="")
     time = models.CharField(max_length=20, choices=TIME_CHOICES, default="")
+    type = models.CharField(max_length=20, choices=TIMESLOT_TYPES, default="")
     module = models.ForeignKey(Module, on_delete=models.CASCADE)
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE)
 
@@ -95,19 +105,18 @@ class TimeSlot(models.Model):
 
 class Group(models.Model):
     number = models.IntegerField()
-    grade = models.IntegerField()
-    semester = models.IntegerField()
-    specialty = models.CharField(max_length=255)
-    school_year = models.IntegerField()
 
     def setConstraints(self):
         pass
 
 
 class Schedule(models.Model):
-    time_slot = models.DurationField()
+    YEAR_CHOICES = [("2023/2024", "2023/2024"), ("2024/2025", "2024/2025")]
     time_slots = models.ManyToManyField(TimeSlot)
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    grade = models.IntegerField(null=True)
+    semester = models.IntegerField(null=True)
+    school_year = models.CharField(max_length=20, choices=YEAR_CHOICES, default="")
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="schedules")
 
     def assignGroup(self, group):
         self.group = group
@@ -118,3 +127,12 @@ class Schedule(models.Model):
 
     def validateSchedule(self):
         pass
+
+
+class Planning(models.Model):
+    speciality = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+    )
+    schedules = models.ForeignKey(Group, on_delete=models.CASCADE)

@@ -1,7 +1,16 @@
 from django.contrib import admin
 from django.contrib.admin.options import ModelAdmin
 
-from .models import User, Module, Teacher, Classroom, TimeSlot, Group, Schedule
+from .models import (
+    User,
+    Module,
+    Teacher,
+    Classroom,
+    TimeSlot,
+    Group,
+    Schedule,
+    Planning,
+)
 
 
 @admin.register(User)
@@ -36,11 +45,42 @@ class TimeSlotAdmin(admin.ModelAdmin):
 
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
-    list_display = ("number", "grade", "semester", "specialty", "school_year")
+    list_display = ("group_info",)
     search_fields = ("number", "specialty")
+
+    def group_info(self, obj):
+        latest_schedule = obj.schedules.last()
+
+        if latest_schedule.grade:
+            if latest_schedule.grade <= 3:
+                letter = "L"
+            else:
+                letter = "M"
+            return f"{letter}{latest_schedule.grade} Group {obj.number} {latest_schedule.school_year}"
+        else:
+            return f"Group {obj.number} (No Schedule)"
+
+    group_info.short_description = "Group Information"
 
 
 @admin.register(Schedule)
 class ScheduleAdmin(admin.ModelAdmin):
-    list_display = ("time_slot", "group")
+    list_display = ("id", "group")
     search_fields = ("group__number", "group__specialty")
+
+
+@admin.register(Planning)
+class PlanningAdmin(admin.ModelAdmin):
+    list_display = ("planning", "speciality")
+    search_fields = ("group__number", "group__specialty")
+
+    def planning(self, obj):
+        first_schedule = obj.schedules.first()
+        if first_schedule:
+            group = first_schedule.group
+            if group.grade <= 3:
+                letter = "L"
+            else:
+                letter = "M"
+            return f"{letter}{group.grade} Group"
+        return "No schedules"
