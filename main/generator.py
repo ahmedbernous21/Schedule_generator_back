@@ -51,6 +51,10 @@ class ScheduleGenerator:
         with transaction.atomic():
             planning.schedules.clear()
 
+            scheduled_timeslots = (
+                set()
+            )  # To track already scheduled (day, time, classroom) combinations
+
             for entry in best_ind:
                 group = entry["group"]
                 module = entry["module"]
@@ -58,6 +62,12 @@ class ScheduleGenerator:
                 time = entry["time"]
                 classroom = entry["classroom"]
                 timeslot_type = entry["type"]
+
+                # Check if a timeslot with the same (day, time, classroom) combination is already scheduled
+                if self.is_timeslot_scheduled(
+                    day, time, classroom, scheduled_timeslots
+                ):
+                    continue  # Skip adding this timeslot
 
                 timeslot = TimeSlot.objects.create(
                     day=day,
@@ -74,7 +84,24 @@ class ScheduleGenerator:
                 )
                 schedule.addTimeSlot(timeslot)
 
+                # Add this (day, time, classroom) combination to scheduled_timeslots
+                scheduled_timeslots.add((day, time, classroom))
+
         return "Successfully generated schedule"
+
+    def is_timeslot_scheduled(self, day, time, classroom, scheduled_timeslots):
+        """
+        Helper method to check if a timeslot with the same (day, time, classroom)
+        combination is already scheduled.
+        """
+        for scheduled_day, scheduled_time, scheduled_classroom in scheduled_timeslots:
+            if (
+                scheduled_day == day
+                and scheduled_time == time
+                and scheduled_classroom == classroom
+            ):
+                return True
+        return False
 
     def init_individual(self):
         individual = []
@@ -87,6 +114,7 @@ class ScheduleGenerator:
         random.shuffle(list(classrooms))
 
         for group in groups:
+            group_schedule = set()  # To track this group's schedule
             for module in modules:
                 for session_type, hours in [
                     ("cours_hours", module.cours_hours),
@@ -102,38 +130,53 @@ class ScheduleGenerator:
                         continue
 
                     for _ in range(int(hours / 1.5)):
-                        day = random.choice(DAYS)
-                        time = random.choice(TIMES)
-                        classroom = random.choice(suitable_classrooms)
-                        individual.append(
-                            {
-                                "group": group,
-                                "module": module,
-                                "day": day,
-                                "time": time,
-                                "classroom": classroom,
-                                "type": session_type,
-                            }
-                        )
+                        attempts = 0
+                        while attempts < 100:  # Limit attempts to prevent infinite loop
+                            day = random.choice(DAYS)
+                            time = random.choice(TIMES)
+                            if (day, time) not in group_schedule:
+                                classroom = random.choice(suitable_classrooms)
+                                individual.append(
+                                    {
+                                        "group": group,
+                                        "module": module,
+                                        "day": day,
+                                        "time": time,
+                                        "classroom": classroom,
+                                        "type": session_type,
+                                    }
+                                )
+                                group_schedule.add((day, time))
+                                break
+                            attempts += 1
 
         return individual
 
     def evaluate(self, individual):
         conflicts = 0
-        timeslot_map = {}
+        scheduled_timeslots = set()  # To track (day, time, classroom) combinations
+        group_schedules = {}  # To track each group's schedule
 
         for schedule in individual:
             group = schedule["group"]
-            module = schedule["module"]
-            classroom = schedule["classroom"]
             day = schedule["day"]
             time = schedule["time"]
+            classroom = schedule["classroom"]
 
-            key = (group.id, module.id, classroom.id, day)
-            if key in timeslot_map:
+            # Check if this (day, time, classroom) combination has already been scheduled
+            if self.is_timeslot_scheduled(day, time, classroom, scheduled_timeslots):
                 conflicts += 1
             else:
-                timeslot_map[key] = (time, schedule)
+                scheduled_timeslots.add((day, time, classroom))
+
+            # Check for conflicts within the same group's schedule
+            if group not in group_schedules:
+                group_schedules[group] = set()
+
+            if (day, time) in group_schedules[group]:
+                conflicts += 1
+            else:
+                group_schedules[group].add((day, time))
 
             if time not in TIMES[:3]:  # Adjust to prioritize earlier timeslots
                 conflicts += 1
