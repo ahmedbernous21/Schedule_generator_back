@@ -42,18 +42,27 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class Planning(models.Model):
+    YEAR_CHOICES = [("2023/2024", "2023/2024"), ("2024/2025", "2024/2025")]
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="planning",
+    )
+    grade = models.IntegerField(null=True)
+    semester = models.IntegerField(null=True)
+    school_year = models.CharField(max_length=20, choices=YEAR_CHOICES, default="")
     speciality = models.CharField(
         max_length=255,
         blank=True,
         null=True,
     )
-    schedules = models.ManyToManyField(
-        "Schedule", related_name="plannings", blank=True, null=True
-    )
 
 
 class Group(models.Model):
     number = models.IntegerField()
+    name = models.CharField(null=True, blank=True)
     planning = models.ForeignKey(
         Planning, on_delete=models.CASCADE, related_name="groups", blank=True, null=True
     )
@@ -74,9 +83,8 @@ class Module(models.Model):
     tp_hours = models.FloatField(blank=True, null=True)
     td_hours = models.FloatField(blank=True, null=True)
     cours_hours = models.FloatField(blank=True, null=True)
-    planning = models.ForeignKey(
+    planning = models.ManyToManyField(
         Planning,
-        on_delete=models.CASCADE,
         related_name="modules",
         blank=True,
         null=True,
@@ -95,9 +103,8 @@ class Teacher(models.Model):
         related_name="teachers",
     )
     name = models.CharField(max_length=255)
-    planning = models.ForeignKey(
+    planning = models.ManyToManyField(
         Planning,
-        on_delete=models.CASCADE,
         related_name="teachers",
         blank=True,
         null=True,
@@ -105,16 +112,12 @@ class Teacher(models.Model):
     hours = models.FloatField()
     modules = models.ManyToManyField("Module", blank=True, related_name="t")
 
-    def assignModule(self, module):
-        self.modules.add(module)
-
 
 class Classroom(models.Model):
     CLASSROM_TYPES = [("TD", "TD"), ("TP", "TP"), ("AMPHI", "AMPHI")]
     classroom_number = models.IntegerField()
-    planning = models.ForeignKey(
+    planning = models.ManyToManyField(
         Planning,
-        on_delete=models.CASCADE,
         related_name="classrooms",
         blank=True,
         null=True,
@@ -169,14 +172,17 @@ class TimeSlot(models.Model):
 
 
 class Schedule(models.Model):
-    YEAR_CHOICES = [("2023/2024", "2023/2024"), ("2024/2025", "2024/2025")]
     time_slots = models.ManyToManyField(TimeSlot)
-    grade = models.IntegerField(null=True)
-    semester = models.IntegerField(null=True)
-    school_year = models.CharField(max_length=20, choices=YEAR_CHOICES, default="")
     group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="schedules")
     user = models.ForeignKey(
         User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="schedules",
+    )
+    planning = models.ForeignKey(
+        Planning,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

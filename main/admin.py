@@ -39,7 +39,7 @@ class ClassroomAdmin(admin.ModelAdmin):
 
 @admin.register(TimeSlot)
 class TimeSlotAdmin(admin.ModelAdmin):
-    list_display = ("time", "day", "module", "classroom")
+    list_display = ("time", "day", "type", "module", "classroom")
     search_fields = ("day", "module__name", "classroom__classroom_number")
 
 
@@ -57,16 +57,5 @@ class ScheduleAdmin(admin.ModelAdmin):
 
 @admin.register(Planning)
 class PlanningAdmin(admin.ModelAdmin):
-    list_display = ("planning", "speciality")
+    list_display = ("id", "speciality", "grade", "semester", "school_year")
     search_fields = ("group__number", "group__specialty")
-
-    def planning(self, obj):
-        first_schedule = obj.schedules.first()
-        if first_schedule:
-            group = first_schedule.group
-            if group.grade <= 3:
-                letter = "L"
-            else:
-                letter = "M"
-            return f"{letter}{group.grade} Group"
-        return "No schedules"

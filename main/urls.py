@@ -11,6 +11,8 @@ from .views import (
     TeacherDetail,
     PlanningDetail,
     ClassroomDetail,
+    GenerateScheduleView,
+    GroupList,
 )
 
 urlpatterns = [
@@ -27,4 +29,10 @@ urlpatterns = [
     path(
         "api/classrooms/<int:pk>/", ClassroomDetail.as_view(), name="classroom-detail"
     ),
+    path(
+        "api/schedule/<int:planning_id>/",
+        GenerateScheduleView.as_view(),
+        name="generate-schedule",
+    ),
+    path("api/groups/", GroupList.as_view(), name="groups"),
 ]
