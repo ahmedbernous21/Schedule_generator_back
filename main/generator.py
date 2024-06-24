@@ -1,99 +1,136 @@
+# services/scheduler.py
 import random
 from deap import base, creator, tools, algorithms
-import django
-from django.conf import settings
-from main.models import Schedule, TimeSlot, Module, Teacher, Classroom
+from main.models import Teacher, Module, Group, Classroom, TimeSlot, Schedule, Planning
 
-django.setup()
-
-# Define constants
-POPULATION_SIZE = 50
-GENERATIONS = 100
-CXPB, MUTPB = 0.5, 0.2
-
-# Setup DEAP genetic algorithm
-creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-creator.create("Individual", list, fitness=creator.FitnessMax)
-
-toolbox = base.Toolbox()
-
-
-# Attribute generator
-def generate_timeslot():
-    return random.choice(TimeSlot.objects.all())
-
-
-# Structure initializers
-toolbox.register("attr_timeslot", generate_timeslot)
-toolbox.register(
-    "individual",
-    tools.initRepeat,
-    creator.Individual,
-    toolbox.attr_timeslot,
-    n=Schedule.objects.count(),
-)
-toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+DAYS = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"]
+TIMES = [
+    "8h:00-9h:30",
+    "9h:30-11h:00",
+    "11h:00-12h:30",
+    "12h:30-14h:00",
+    "14h:00-15h:30",
+    "15h:30-17h:00",
+]
+CLASSROOM_TYPES = {
+    "cours_hours": "AMPHI",
+    "td_hours": "TD",
+    "tp_hours": "TP",
+}
 
 
 def evaluate(individual):
-    # Fitness function to evaluate the schedule
-    fitness = 0
-    schedule = Schedule()
-
-    for idx, timeslot in enumerate(individual):
-        module = Module.objects.all()[idx % Module.objects.count()]
-        teacher = module.user.teacher
-        classroom = Classroom.objects.filter(type=timeslot.type).first()
-
-        if not schedule.timeslots.filter(
-            module=module, teacher=teacher, classroom=classroom, time=timeslot.time
-        ).exists():
-            schedule.timeslots.add(timeslot)
-            fitness += 1
-        else:
-            fitness -= 1
-
-    return (fitness,)
+    conflicts = 0
+    for schedule in individual:
+        # Check for conflicts
+        pass  # Implement conflict checking logic here
+    return (conflicts,)
 
 
-def crossover(ind1, ind2):
-    tools.cxTwoPoint(ind1, ind2)
+def init_individual():
+    individual = []
+    groups = Group.objects.all()
+    modules = Module.objects.all()
+    classrooms = list(Classroom.objects.all())
+    random.shuffle(classrooms)
+
+    for group in groups:
+        for module in modules:
+            for session_type, hours in [
+                ("cours_hours", module.cours_hours),
+                ("td_hours", module.td_hours),
+                ("tp_hours", module.tp_hours),
+            ]:
+                if hours <= 0:
+                    continue
+                suitable_classrooms = [
+                    c for c in classrooms if c.type == CLASSROOM_TYPES[session_type]
+                ]
+                if not suitable_classrooms:
+                    continue
+
+                for _ in range(int(hours / 1.5)):
+                    day = random.choice(DAYS)
+                    time = random.choice(TIMES)
+                    classroom = random.choice(suitable_classrooms)
+                    individual.append(
+                        {
+                            "group": group,
+                            "module": module,
+                            "day": day,
+                            "time": time,
+                            "classroom": classroom,
+                            "type": session_type,
+                        }
+                    )
+    return individual
+
+
+def cx_individual(ind1, ind2):
+    size = min(len(ind1), len(ind2))
+    for i in range(size):
+        if random.random() < 0.5:
+            ind1[i], ind2[i] = ind2[i], ind1[i]
     return ind1, ind2
 
 
-def mutate(individual):
-    if random.random() < MUTPB:
-        index = random.randint(0, len(individual) - 1)
-        individual[index] = generate_timeslot()
+def mut_individual(individual):
+    if len(individual) > 0:
+        i = random.randint(0, len(individual) - 1)
+        individual[i]["day"] = random.choice(DAYS)
+        individual[i]["time"] = random.choice(TIMES)
+        individual[i]["classroom"] = random.choice(list(Classroom.objects.all()))
     return (individual,)
 
 
-toolbox.register("evaluate", evaluate)
-toolbox.register("mate", crossover)
-toolbox.register("mutate", mutate)
-toolbox.register("select", tools.selTournament, tournsize=3)
+class ScheduleGenerator:
+    def __init__(self, planning_id):
+        self.planning_id = planning_id
 
+    def generate_schedule(self):
+        creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
+        creator.create("Individual", list, fitness=creator.FitnessMin)
 
-def main():
-    pop = toolbox.population(n=POPULATION_SIZE)
-    hof = tools.HallOfFame(1)
+        toolbox = base.Toolbox()
+        toolbox.register(
+            "individual", tools.initIterate, creator.Individual, init_individual
+        )
+        toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+        toolbox.register("evaluate", evaluate)
+        toolbox.register("mate", cx_individual)
+        toolbox.register("mutate", mut_individual)
+        toolbox.register("select", tools.selTournament, tournsize=3)
 
-    # Algorithms.eaSimple is a simple genetic algorithm.
-    algorithms.eaSimple(
-        pop,
-        toolbox,
-        cxpb=CXPB,
-        mutpb=MUTPB,
-        ngen=GENERATIONS,
-        stats=None,
-        halloffame=hof,
-        verbose=True,
-    )
+        population = toolbox.population(n=100)
+        ngen = 50
+        cxpb = 0.5
+        mutpb = 0.2
 
-    return hof
+        algorithms.eaSimple(population, toolbox, cxpb, mutpb, ngen, verbose=True)
 
+        best_ind = tools.selBest(population, 1)[0]
 
-if __name__ == "__main__":
-    best_individuals = main()
-    best_schedule = best_individuals[0]
-    print("Best Schedule:", best_schedule)
+        planning = Planning.objects.get(pk=self.planning_id)
+        for entry in best_ind:
+            group = entry["group"]
+            module = entry["module"]
+            day = entry["day"]
+            time = entry["time"]
+            classroom = entry["classroom"]
+            timeslot_type = entry["type"]
+
+            timeslot = TimeSlot.objects.create(
+                day=day,
+                time=time,
+                type=timeslot_type.upper(),
+                module=module,
+                classroom=classroom,
+            )
+
+            schedule, created = Schedule.objects.get_or_create(
+                group=group,
+            )
+            schedule.addTimeSlot(timeslot)
+
+        planning.save()
+        return "Successfully generated schedule"
