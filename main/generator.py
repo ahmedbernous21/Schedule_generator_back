@@ -113,42 +113,70 @@ class ScheduleGenerator:
 
         random.shuffle(list(classrooms))
 
-        for group in groups:
-            group_schedule = set()  # To track this group's schedule
-            for module in modules:
-                for session_type, hours in [
-                    ("cours_hours", module.cours_hours),
-                    ("td_hours", module.td_hours),
-                    ("tp_hours", module.tp_hours),
-                ]:
-                    if hours <= 0:
-                        continue
-                    suitable_classrooms = [
-                        c for c in classrooms if c.type == CLASSROOM_TYPES[session_type]
-                    ]
-                    if not suitable_classrooms:
-                        continue
+        for module in modules:
+            # Handle cours_hours
+            if module.cours_hours > 0:
+                cours_day = random.choice(DAYS)
+                cours_time = random.choice(
+                    TIMES[:3]
+                )  # Choose from first three timeslots
+                cours_classroom = random.choice(
+                    list(classrooms.filter(type=CLASSROOM_TYPES["cours_hours"]))
+                )
 
-                    for _ in range(int(hours / 1.5)):
-                        attempts = 0
-                        while attempts < 100:  # Limit attempts to prevent infinite loop
-                            day = random.choice(DAYS)
-                            time = random.choice(TIMES)
-                            if (day, time) not in group_schedule:
-                                classroom = random.choice(suitable_classrooms)
-                                individual.append(
-                                    {
-                                        "group": group,
-                                        "module": module,
-                                        "day": day,
-                                        "time": time,
-                                        "classroom": classroom,
-                                        "type": session_type,
-                                    }
-                                )
-                                group_schedule.add((day, time))
-                                break
-                            attempts += 1
+                for group in groups:
+                    individual.append(
+                        {
+                            "group": group,
+                            "module": module,
+                            "day": cours_day,
+                            "time": cours_time,
+                            "classroom": cours_classroom,
+                            "type": "COURS",
+                        }
+                    )
+
+            # Handle td_hours
+            if module.td_hours > 0:
+                for group in groups:
+                    for _ in range(int(module.td_hours / 1.5)):
+                        individual.append(
+                            {
+                                "group": group,
+                                "module": module,
+                                "day": random.choice(DAYS),
+                                "time": random.choice(TIMES),
+                                "classroom": random.choice(
+                                    list(
+                                        classrooms.filter(
+                                            type=CLASSROOM_TYPES["td_hours"]
+                                        )
+                                    )
+                                ),
+                                "type": "TD",
+                            }
+                        )
+
+            # Handle tp_hours
+            if module.tp_hours > 0:
+                for group in groups:
+                    for _ in range(int(module.tp_hours / 1.5)):
+                        individual.append(
+                            {
+                                "group": group,
+                                "module": module,
+                                "day": random.choice(DAYS),
+                                "time": random.choice(TIMES),
+                                "classroom": random.choice(
+                                    list(
+                                        classrooms.filter(
+                                            type=CLASSROOM_TYPES["tp_hours"]
+                                        )
+                                    )
+                                ),
+                                "type": "TP",
+                            }
+                        )
 
         return individual
 
@@ -156,16 +184,23 @@ class ScheduleGenerator:
         conflicts = 0
         scheduled_timeslots = set()  # To track (day, time, classroom) combinations
         group_schedules = {}  # To track each group's schedule
+        cours_schedules = {}  # To track cours schedules for each module
 
         for schedule in individual:
             group = schedule["group"]
+            module = schedule["module"]
             day = schedule["day"]
             time = schedule["time"]
             classroom = schedule["classroom"]
+            session_type = schedule["type"]
 
             # Check if this (day, time, classroom) combination has already been scheduled
             if self.is_timeslot_scheduled(day, time, classroom, scheduled_timeslots):
-                conflicts += 1
+                if (
+                    session_type != "COURS"
+                    or (module, day, time, classroom) not in cours_schedules
+                ):
+                    conflicts += 1
             else:
                 scheduled_timeslots.add((day, time, classroom))
 
@@ -174,9 +209,17 @@ class ScheduleGenerator:
                 group_schedules[group] = set()
 
             if (day, time) in group_schedules[group]:
-                conflicts += 1
+                if (
+                    session_type != "COURS"
+                    or (module, day, time) not in cours_schedules
+                ):
+                    conflicts += 1
             else:
                 group_schedules[group].add((day, time))
+
+            # Track cours schedules
+            if session_type == "COURS":
+                cours_schedules[(module, day, time, classroom)] = True
 
             if time not in TIMES[:3]:  # Adjust to prioritize earlier timeslots
                 conflicts += 1
