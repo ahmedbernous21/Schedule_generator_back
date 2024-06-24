@@ -84,6 +84,8 @@ AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 )
+CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:4200", "http://127.0.0.1:8000"]
+
 CORS_ORIGIN_WHITELIST = (
     f"http://127.0.0.1:4200",
     "https://babar.app",

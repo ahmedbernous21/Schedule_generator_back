@@ -41,20 +41,69 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
 
+class Planning(models.Model):
+    speciality = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+    )
+    schedules = models.ManyToManyField(
+        "Schedule", related_name="plannings", blank=True, null=True
+    )
+
+
+class Group(models.Model):
+    number = models.IntegerField()
+    planning = models.ForeignKey(
+        Planning, on_delete=models.CASCADE, related_name="groups", blank=True, null=True
+    )
+
+    def setConstraints(self):
+        pass
+
+
 class Module(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="modules",
+    )
     name = models.CharField(max_length=255)
-    tp_hours = models.FloatField()
-    td_hours = models.FloatField()
-    cours_hours = models.FloatField()
+    tp_hours = models.FloatField(blank=True, null=True)
+    td_hours = models.FloatField(blank=True, null=True)
+    cours_hours = models.FloatField(blank=True, null=True)
+    planning = models.ForeignKey(
+        Planning,
+        on_delete=models.CASCADE,
+        related_name="modules",
+        blank=True,
+        null=True,
+    )
 
     def setModuleHours(self):
         pass
 
 
 class Teacher(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="teachers",
+    )
     name = models.CharField(max_length=255)
+    planning = models.ForeignKey(
+        Planning,
+        on_delete=models.CASCADE,
+        related_name="teachers",
+        blank=True,
+        null=True,
+    )
     hours = models.FloatField()
-    modules = models.ManyToManyField("Module", blank=True)
+    modules = models.ManyToManyField("Module", blank=True, related_name="t")
 
     def assignModule(self, module):
         self.modules.add(module)
@@ -63,6 +112,13 @@ class Teacher(models.Model):
 class Classroom(models.Model):
     CLASSROM_TYPES = [("TD", "TD"), ("TP", "TP"), ("AMPHI", "AMPHI")]
     classroom_number = models.IntegerField()
+    planning = models.ForeignKey(
+        Planning,
+        on_delete=models.CASCADE,
+        related_name="classrooms",
+        blank=True,
+        null=True,
+    )
     type = models.CharField(max_length=255, choices=CLASSROM_TYPES)
 
     def setAvailability(self):
@@ -86,13 +142,22 @@ class TimeSlot(models.Model):
         ("Wednesday", "Wednesday"),
         ("Thursday", "Thursday"),
     ]
-    TIMESLOT_TYPES = [("TD", "TD"), ("TP", "TP"), ("COURS", "COURS")]
+    TIMESLOT_TYPES = [
+        ("TD", "TD"),
+        ("TP", "TP"),
+        ("COURS", "COURS"),
+        ("ONLINE", "ONLINE"),
+    ]
 
     day = models.CharField(max_length=20, choices=DAY_CHOICES, default="")
     time = models.CharField(max_length=20, choices=TIME_CHOICES, default="")
     type = models.CharField(max_length=20, choices=TIMESLOT_TYPES, default="")
-    module = models.ForeignKey(Module, on_delete=models.CASCADE)
-    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE)
+    module = models.ForeignKey(
+        Module, on_delete=models.CASCADE, related_name="timeslots"
+    )
+    classroom = models.ForeignKey(
+        Classroom, on_delete=models.CASCADE, related_name="timeslots"
+    )
 
     def assignModule(self, module):
         self.module = module
@@ -103,13 +168,6 @@ class TimeSlot(models.Model):
         self.save()
 
 
-class Group(models.Model):
-    number = models.IntegerField()
-
-    def setConstraints(self):
-        pass
-
-
 class Schedule(models.Model):
     YEAR_CHOICES = [("2023/2024", "2023/2024"), ("2024/2025", "2024/2025")]
     time_slots = models.ManyToManyField(TimeSlot)
@@ -117,6 +175,13 @@ class Schedule(models.Model):
     semester = models.IntegerField(null=True)
     school_year = models.CharField(max_length=20, choices=YEAR_CHOICES, default="")
     group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="schedules")
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="schedules",
+    )
 
     def assignGroup(self, group):
         self.group = group
@@ -127,12 +192,3 @@ class Schedule(models.Model):
 
     def validateSchedule(self):
         pass
-
-
-class Planning(models.Model):
-    speciality = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-    )
-    schedules = models.ForeignKey(Group, on_delete=models.CASCADE)

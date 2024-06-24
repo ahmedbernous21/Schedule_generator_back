@@ -45,22 +45,8 @@ class TimeSlotAdmin(admin.ModelAdmin):
 
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
-    list_display = ("group_info",)
+    list_display = ("number",)
     search_fields = ("number", "specialty")
-
-    def group_info(self, obj):
-        latest_schedule = obj.schedules.last()
-
-        if latest_schedule.grade:
-            if latest_schedule.grade <= 3:
-                letter = "L"
-            else:
-                letter = "M"
-            return f"{letter}{latest_schedule.grade} Group {obj.number} {latest_schedule.school_year}"
-        else:
-            return f"Group {obj.number} (No Schedule)"
-
-    group_info.short_description = "Group Information"
 
 
 @admin.register(Schedule)

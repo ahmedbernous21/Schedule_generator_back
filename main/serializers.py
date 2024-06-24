@@ -1,7 +1,7 @@
 # views.py
 from rest_framework import serializers
 from rest_framework.permissions import AllowAny
-from .models import User, Schedule, TimeSlot, Module, Classroom
+from .models import User, Schedule, TimeSlot, Module, Classroom, Teacher, Planning
 from dj_rest_auth.serializers import LoginSerializer
 from django.contrib.auth.hashers import make_password
 
@@ -23,7 +23,17 @@ class CustomLoginSerializer(LoginSerializer):
     password = serializers.CharField(style={"input_type": "password"})
 
 
+class TeacherSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Teacher
+        fields = "__all__"
+
+
 class ModuleSerializer(serializers.ModelSerializer):
+    teachers = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Teacher.objects.all(), required=False
+    )
 
     class Meta:
         model = Module
@@ -48,7 +58,24 @@ class TimeSlotSerializer(serializers.ModelSerializer):
 
 class ScheduleSerializer(serializers.ModelSerializer):
     time_slots = TimeSlotSerializer(many=True, read_only=True)
+    user = UserSerializer(read_only=True)
 
     class Meta:
         model = Schedule
+        fields = "__all__"
+
+
+class PlanningSerializer(serializers.ModelSerializer):
+    time_slots = TimeSlotSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Planning
+        fields = "__all__"
+
+
+class ClassroomSerializer(serializers.ModelSerializer):
+    time_slots = TimeSlotSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Classroom
         fields = "__all__"

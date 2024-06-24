@@ -1,30 +1,55 @@
 [
   {
+    "model": "main.User",
+    "pk": 1,
+    "fields": {
+      "email": "teacher1@example.com",
+      "name": "Teacher One",
+      "is_expert": false,
+      "is_superuser": false,
+      "is_staff": true
+    }
+  },
+  {
+    "model": "main.User",
+    "pk": 2,
+    "fields": {
+      "email": "teacher2@example.com",
+      "name": "Teacher Two",
+      "is_expert": false,
+      "is_superuser": false,
+      "is_staff": true
+    }
+  },
+  {
     "model": "main.Module",
     "pk": 1,
     "fields": {
-      "name": "C-OPM",
-      "tp_hours": 0.0,
-      "td_hours": 0.0,
-      "cours_hours": 0.0
+      "user": 1,
+      "name": "Introduction to AI",
+      "tp_hours": 4,
+      "td_hours": 4,
+      "cours_hours": 2
     }
   },
   {
     "model": "main.Module",
     "pk": 2,
     "fields": {
-      "name": "C-TIC",
-      "tp_hours": 0.0,
-      "td_hours": 0.0,
-      "cours_hours": 0.0
+      "user": 2,
+      "name": "Mobile main Development",
+      "tp_hours": 3,
+      "td_hours": 3,
+      "cours_hours": 3
     }
   },
   {
     "model": "main.Teacher",
     "pk": 1,
     "fields": {
-      "name": "Maallem",
-      "hours": 0.0,
+      "user": 1,
+      "name": "Teacher One",
+      "hours": 10,
       "modules": [1]
     }
   },
@@ -32,8 +57,9 @@
     "model": "main.Teacher",
     "pk": 2,
     "fields": {
-      "name": "AliGuechi",
-      "hours": 0.0,
+      "user": 2,
+      "name": "Teacher Two",
+      "hours": 10,
       "modules": [2]
     }
   },
@@ -41,47 +67,45 @@
     "model": "main.Classroom",
     "pk": 1,
     "fields": {
-      "classroom_number": 2,
-      "type": "AMPHI"
+      "classroom_number": 101,
+      "type": "TP"
     }
   },
   {
-    "model": "main.TimeSlot",
-    "pk": 1,
-    "fields": {
-      "day": "Saturday",
-      "time": "8h:00-9h:30",
-      "module": 1,
-      "classroom": 1
-    }
-  },
-  {
-    "model": "main.TimeSlot",
+    "model": "main.Classroom",
     "pk": 2,
     "fields": {
-      "day": "Saturday",
-      "time": "11h:00-12h:30",
-      "module": 2,
-      "classroom": 1
+      "classroom_number": 102,
+      "type": "TD"
+    }
+  },
+  {
+    "model": "main.Classroom",
+    "pk": 3,
+    "fields": {
+      "classroom_number": 103,
+      "type": "AMPHI"
     }
   },
   {
     "model": "main.Group",
     "pk": 1,
     "fields": {
-      "number": 1,
-      "grade": 1,
-      "semester": 1,
-      "specialty": "Info",
-      "school_year": "2023/2024"
+      "number": 1
     }
   },
   {
-    "model": "main.Schedule",
-    "pk": 1,
+    "model": "main.Group",
+    "pk": 2,
     "fields": {
-      "group": 1,
-      "time_slots": [1, 2]
+      "number": 2
+    }
+  },
+  {
+    "model": "main.Group",
+    "pk": 3,
+    "fields": {
+      "number": 3
     }
   }
 ]
