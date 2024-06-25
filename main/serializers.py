@@ -120,9 +120,18 @@ class PlanningSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class GroupSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Group
+        fields = "__all__"
+
+
 class ScheduleSerializer(serializers.ModelSerializer):
     time_slots = TimeSlotSerializer(many=True, read_only=True)
     user = UserSerializer(read_only=True)
+    planning = PlanningSerializer(read_only=True)
+    group = GroupSerializer(read_only=True)
 
     class Meta:
         model = Schedule
@@ -134,18 +143,4 @@ class ClassroomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Classroom
-        fields = "__all__"
-
-
-class GroupSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Group
-        fields = "__all__"
-
-
-class TimeSlotSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Group
         fields = "__all__"
