@@ -94,89 +94,57 @@ class ScheduleGenerator:
         Helper method to check if a timeslot with the same (day, time, classroom)
         combination is already scheduled.
         """
-        for scheduled_day, scheduled_time, scheduled_classroom in scheduled_timeslots:
-            if (
-                scheduled_day == day
-                and scheduled_time == time
-                and scheduled_classroom == classroom
-            ):
-                return True
-        return False
+        return (day, time, classroom) in scheduled_timeslots
 
     def init_individual(self):
         individual = []
         planning = Planning.objects.get(pk=self.planning_id)
         groups = planning.groups.all()
         modules = planning.modules.all()
-        classrooms = planning.classrooms.all()
-        teachers = planning.teachers.all()
+        classrooms = list(planning.classrooms.all())
 
-        random.shuffle(list(classrooms))
+        random.shuffle(classrooms)
 
         for module in modules:
-            # Handle cours_hours
-            if module.cours_hours > 0:
-                cours_day = random.choice(DAYS)
-                cours_time = random.choice(
-                    TIMES[:3]
-                )  # Choose from first three timeslots
-                cours_classroom = random.choice(
-                    list(classrooms.filter(type=CLASSROOM_TYPES["cours_hours"]))
-                )
+            module_hours = {
+                "COURS": module.cours_hours,
+                "TD": module.td_hours,
+                "TP": module.tp_hours,
+            }
 
-                for group in groups:
-                    individual.append(
-                        {
-                            "group": group,
-                            "module": module,
-                            "day": cours_day,
-                            "time": cours_time,
-                            "classroom": cours_classroom,
-                            "type": "COURS",
-                        }
-                    )
+            for session_type, hours in module_hours.items():
+                if hours > 0:
+                    suitable_classrooms = [
+                        c
+                        for c in classrooms
+                        if c.type == CLASSROOM_TYPES[f"{session_type.lower()}_hours"]
+                    ]
 
-            # Handle td_hours
-            if module.td_hours > 0:
-                for group in groups:
-                    for _ in range(int(module.td_hours / 1.5)):
-                        individual.append(
-                            {
-                                "group": group,
-                                "module": module,
-                                "day": random.choice(DAYS),
-                                "time": random.choice(TIMES),
-                                "classroom": random.choice(
-                                    list(
-                                        classrooms.filter(
-                                            type=CLASSROOM_TYPES["td_hours"]
-                                        )
-                                    )
-                                ),
-                                "type": "TD",
-                            }
-                        )
+                    if not suitable_classrooms:
+                        continue
 
-            # Handle tp_hours
-            if module.tp_hours > 0:
-                for group in groups:
-                    for _ in range(int(module.tp_hours / 1.5)):
-                        individual.append(
-                            {
-                                "group": group,
-                                "module": module,
-                                "day": random.choice(DAYS),
-                                "time": random.choice(TIMES),
-                                "classroom": random.choice(
-                                    list(
-                                        classrooms.filter(
-                                            type=CLASSROOM_TYPES["tp_hours"]
-                                        )
-                                    )
-                                ),
-                                "type": "TP",
-                            }
-                        )
+                    num_sessions = int(hours / 1.5)
+                    sessions = []
+
+                    for _ in range(num_sessions):
+                        day = random.choice(DAYS)
+                        time = random.choice(TIMES)
+                        classroom = random.choice(suitable_classrooms)
+                        sessions.append((day, time, classroom, session_type))
+
+                    for group in groups:
+                        for session in sessions:
+                            day, time, classroom, session_type = session
+                            individual.append(
+                                {
+                                    "group": group,
+                                    "module": module,
+                                    "day": day,
+                                    "time": time,
+                                    "classroom": classroom,
+                                    "type": session_type,
+                                }
+                            )
 
         return individual
 

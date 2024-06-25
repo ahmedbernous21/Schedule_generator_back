@@ -13,6 +13,8 @@ from .views import (
     ClassroomDetail,
     GenerateScheduleView,
     GroupList,
+    SlotDetail,
+    SlotList,
 )
 
 urlpatterns = [
@@ -20,6 +22,8 @@ urlpatterns = [
     path("api/schedules/", ScheduleList.as_view(), name="schedules"),
     path("api/schedules/<int:pk>/", ScheduleDetail.as_view(), name="schedule-detail"),
     path("api/modules/", ModulesList.as_view(), name="modules"),
+    path("api/slot/<int:pk>/", SlotDetail.as_view(), name="slot-detail"),
+    path("api/slots/", SlotList.as_view(), name="slots"),
     path("api/modules/<int:pk>/", ModuleDetail.as_view(), name="module-detail"),
     path("api/teachers/", TeacherList.as_view(), name="teachers"),
     path("api/teachers/<int:pk>/", TeacherDetail.as_view(), name="teacher-detail"),

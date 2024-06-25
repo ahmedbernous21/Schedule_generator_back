@@ -12,8 +12,18 @@ from .serializers import (
     PlanningSerializer,
     ClassroomSerializer,
     GroupSerializer,
+    TimeSlotSerializer,
 )
-from .models import User, Schedule, Module, Teacher, Planning, Classroom, Group
+from .models import (
+    User,
+    Schedule,
+    Module,
+    Teacher,
+    Planning,
+    Classroom,
+    Group,
+    TimeSlot,
+)
 from dj_rest_auth.views import LoginView
 from django.views import View
 from rest_framework import viewsets, status
@@ -61,6 +71,17 @@ class ClassroomList(generics.ListCreateAPIView):
 class ScheduleDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Schedule.objects.all()
     serializer_class = ScheduleSerializer
+    lookup_field = "pk"
+
+
+class SlotList(generics.ListCreateAPIView):
+    queryset = TimeSlot.objects.all()
+    serializer_class = TimeSlotSerializer
+
+
+class SlotDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = TimeSlot.objects.all()
+    serializer_class = TimeSlotSerializer
     lookup_field = "pk"
 
 
